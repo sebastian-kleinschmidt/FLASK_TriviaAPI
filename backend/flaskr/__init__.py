@@ -33,10 +33,14 @@ def create_app(test_config=None):
   for all available categories.
   '''
   @app.route('/categories/<int:category_id>', methods=['GET'])
-  def categories_endpoint(category_id):
+  def get_categories(category_id):
     category_item = Category.query.filter_by(id=category_id).one_or_none()
-    return jsonify({'id': category_item.id,
-                    'type': category_item.type})
+
+    if category_item == None:
+      abort(404)
+    else:
+      return jsonify({'id': category_item.id,
+                      'type': category_item.type})
 
   '''
   @TODO: 
@@ -50,6 +54,19 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
+  @app.route('/questions', methods=['GET'])
+  def get_question():
+    question_id = request.args.get('page', 1, type=int)
+    start_id = (question_id-1)*10
+    end_id = question_id*10
+    questions = Question.query.order_by(Question.id).all()
+    formatted_questions = [question.format() for question in questions]
+
+    return jsonify({'success': True,
+                    'questions': formatted_questions[start_id:end_id],
+                    'total_questions': len(formatted_questions),
+                    'current category': 0, #Todo
+                    'categories': 0}) #Todo
 
   '''
   @TODO: 
@@ -58,6 +75,29 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
+  @app.route('/questions/<int:question_id>', methods=['DELETE'])
+  def delete_question(question_id):
+    try: 
+      question = Question.query.filter(Question.id == question_id).one_or_none()
+      if question is None:
+        abort(404)
+            
+      question.delete()
+      print("Delete Success")
+      question_id = request.args.get('page', 1, type=int)
+      start_id = (question_id-1)*10
+      end_id = question_id*10
+      questions = Question.query.order_by(Question.id).all()
+      formatted_questions = [question.format() for question in questions]
+
+      return jsonify({'success': True,
+                      'questions': formatted_questions[start_id:end_id],
+                      'total_questions': len(formatted_questions),
+                      'current category': 0, #Todo
+                      'categories': 0}) #Todo
+    except Exception as error:
+      print("\nerror => {}\n".format(error))
+      abort(422)
 
   '''
   @TODO: 
@@ -108,6 +148,22 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+      return jsonify({
+          "success": False, 
+          "error": 404,
+          "message": "Not found"
+          }), 404
+
+
+  @app.errorhandler(422)
+  def not_found(error):
+      return jsonify({
+          "success": False, 
+          "error": 422,
+          "message": "Unprocessable Entity"
+          }), 422
   
   return app
 
