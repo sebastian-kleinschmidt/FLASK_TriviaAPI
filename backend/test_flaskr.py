@@ -18,6 +18,19 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.new_question = {
+            'question': 'Who is the president elect?',
+            'answer': 'Joe Biden',
+            'category': 1,
+            'difficulty': 1
+        }
+
+        self.start_quiz = {
+            'previous_questions' : [],
+            'quiz_category': {'id': 1,
+                            'type': 'science'}
+        }
+
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -33,7 +46,82 @@ class TriviaTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
+    # test retrive categories
+    def test_get_existing_category_details(self):
+        res = self.client().get('/categories/1')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['id'])
+        self.assertTrue(data['type'])
 
+    def test_get_non_existing_category_details(self):
+        res = self.client().get('/categories/99999')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+
+    # test question endpoint
+    def test_get_questions(self):
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['categories']))
+
+    # Test delete existing question endpoint
+    def test_delete_existing_question(self):
+        res = self.client().delete('/questions/1')
+        data = json.loads(res.data)
+        
+        question = Question.query.filter(Question.id == 1).one_or_none()
+        
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']))  
+        self.assertTrue(data['total_questions'])
+        self.assertEqual(question, None)
+
+    # Test delete existing question endpoint
+    def test_delete_non_existing_question(self):
+        res = self.client().delete('/questions/99999')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+
+    # Test post question endpoint
+    def test_post_question(self):
+        res =  self.client().post('/questions', json=self.new_question)
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(data['created'])
+
+    # test categories question endpoint
+    def test_get_questions_for_category(self):
+        res = self.client().get('/categories/1/questions')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']))
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['categories']))
+
+    # test quiz
+    def test_get_questions_for_quiz(self):
+        res = self.client().post('/quizzes', json=self.start_quiz)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['question']))
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['categories']))
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
