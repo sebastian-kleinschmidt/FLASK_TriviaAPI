@@ -20,6 +20,12 @@ def create_app(test_config=None):
     formatted_questions = [question.format() for question in selection]
     return formatted_questions[start_id:end_id]
 
+  def get_all_categories():
+    categories = Category.query.all()
+    categories = [category.type for category in categories]
+    #categories.insert(0, "All")
+    return categories
+
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
@@ -42,14 +48,7 @@ def create_app(test_config=None):
 
   @app.route('/categories', methods=['GET'])
   def get_categories():
-    categories = Category.query.all()
-
-    if categories == None:
-      abort(404)
-    else:
-      #categories_formatted = [category.format() for category in categories]
-      categories = [category.type for category in categories]
-      return jsonify({'categories' : categories})
+    return jsonify({'categories' : get_all_categories()})
 
   @app.route('/categories/<int:category_id>', methods=['GET'])
   def get_category(category_id):
@@ -78,14 +77,11 @@ def create_app(test_config=None):
     questions = Question.query.order_by(Question.id).all()
     formatted_questions = paginate_questions(request, questions)
 
-    categories = Category.query.all()
-    categories = [category.type for category in categories]
-
     return jsonify({'success': True,
                     'questions': formatted_questions,
                     'total_questions': len(questions),
                     'current category': 0, #Todo
-                    'categories': categories})
+                    'categories': get_all_categories()})
 
   '''
   @TODO: 
@@ -106,14 +102,11 @@ def create_app(test_config=None):
       questions = Question.query.order_by(Question.id).all()
       formatted_questions = paginate_questions(request, questions)
 
-      categories = Category.query.all()
-      categories = [category.type for category in categories]
-
       return jsonify({'success': True,
                       'questions': formatted_questions,
                       'total_questions': len(questions),
                       'current category': 0, #Todo
-                      'categories': categories})
+                      'categories': get_all_categories()})
     except Exception as error:
       print("\nerror => {}\n".format(error))
       abort(422)
@@ -128,32 +121,6 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-
-  @app.route('/questions', methods=['POST'])
-  def create_question():
-      body = request.get_json()
-      new_question = body.get('question', None)
-      new_answer = body.get('answer', None)
-      new_category = body.get('category', None)
-      new_difficulty = body.get('difficulty', None)
-
-      try: 
-          question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
-          question.insert()
-          
-          selection = Question.query.order_by(Question.id).all()
-          current_books = paginate_questions(request, selection)
-          
-          return jsonify({
-              'success': True,
-              'created': question.id,
-              'books': current_books,
-              'total_books': len(Question.query.all())
-          })
-      except Exception as error: 
-          print("\nerror => {}\n".format(error)) 
-          abort(422)
-
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -165,6 +132,45 @@ def create_app(test_config=None):
   Try using the word "title" to start. 
   '''
 
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+      body = request.get_json()
+      new_question = body.get('question', None)
+      new_answer = body.get('answer', None)
+      new_category = body.get('category', None)
+      new_difficulty = body.get('difficulty', None)
+      search = body.get('searchTerm', None)
+      print(search)
+
+      try: 
+          if search: 
+              questions = Question.query.order_by(Question.id).filter(Question.question.ilike('%{}%'.format(search)))
+              current_selections = paginate_questions(request, questions)
+
+              return jsonify({'success': True,
+                          'questions': current_selections,
+                          'total_questions': len(current_selections),
+                          'current category': 0, #Todo
+                          'categories': get_all_categories()})
+
+          else:
+              question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+              question.insert()
+              
+              selection = Question.query.order_by(Question.id).all()
+              current_questions = paginate_questions(request, selection)
+              
+              return jsonify({
+                  'success': True,
+                  'created': question.id,
+                  'questions': current_questions,
+                  'total_questions': len(Question.query.all())
+              })
+      except Exception as error: 
+          print("\nerror => {}\n".format(error)) 
+          abort(422)
+
+
   '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
@@ -175,15 +181,15 @@ def create_app(test_config=None):
   '''
   @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def get_question_by_category(category_id):
-    questions = Question.query.filter(Question.category==category_id).order_by(Question.id).all()
+    questions = Question.query.filter(Question.category==category_id+1).order_by(Question.id).all()
 
     formatted_questions = paginate_questions(request, questions)
 
     return jsonify({'success': True,
                     'questions': formatted_questions,
                     'total_questions': len(questions),
-                    'current category': category_id, #Todo
-                    'categories': 0}) #Todo
+                    'current category': category_id,
+                    'categories': get_all_categories()})
 
   '''
   @TODO: 
