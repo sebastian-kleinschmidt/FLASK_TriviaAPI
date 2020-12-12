@@ -386,6 +386,30 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
+### POST /questions/search
+
+- Finds all questions containing the given search term, the total number of questions with the search term, and a success message. 
+
+#### Sample
+
+`curl -X POST http://127.0.0.1:5000/questions/search -H "Content-Type: application/json" -d '{"searchTerm": "hanks"}'`
+
+```
+{
+  "questions": [
+    {
+      "answer": "Apollo 13", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    }
+  ], 
+  "success": true, 
+  "total_questions": 1
+}
+```
+
 ### GET /categories/`category_id`/questions
 
 - Returns a list of a maximum of 10 questions of the given category, the available categories, the current category, the total number of questions in this category and a success message. The current page is given by the 'page' argument of the query string (default is the first page).
