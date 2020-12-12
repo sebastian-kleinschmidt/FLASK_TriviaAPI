@@ -39,8 +39,20 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
+
+  @app.route('/categories', methods=['GET'])
+  def get_categories():
+    categories = Category.query.all()
+
+    if categories == None:
+      abort(404)
+    else:
+      #categories_formatted = [category.format() for category in categories]
+      categories = [category.type for category in categories]
+      return jsonify({'categories' : categories})
+
   @app.route('/categories/<int:category_id>', methods=['GET'])
-  def get_categories(category_id):
+  def get_category(category_id):
     category_item = Category.query.filter_by(id=category_id).one_or_none()
 
     if category_item == None:
@@ -66,11 +78,14 @@ def create_app(test_config=None):
     questions = Question.query.order_by(Question.id).all()
     formatted_questions = paginate_questions(request, questions)
 
+    categories = Category.query.all()
+    categories = [category.type for category in categories]
+
     return jsonify({'success': True,
                     'questions': formatted_questions,
                     'total_questions': len(questions),
                     'current category': 0, #Todo
-                    'categories': 0}) #Todo
+                    'categories': categories})
 
   '''
   @TODO: 
@@ -87,15 +102,18 @@ def create_app(test_config=None):
         abort(404)
             
       question.delete()
-      print("Delete Success")
+
       questions = Question.query.order_by(Question.id).all()
       formatted_questions = paginate_questions(request, questions)
+
+      categories = Category.query.all()
+      categories = [category.type for category in categories]
 
       return jsonify({'success': True,
                       'questions': formatted_questions,
                       'total_questions': len(questions),
                       'current category': 0, #Todo
-                      'categories': 0}) #Todo
+                      'categories': categories})
     except Exception as error:
       print("\nerror => {}\n".format(error))
       abort(422)
@@ -155,7 +173,17 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+  def get_question_by_category(category_id):
+    questions = Question.query.filter(Question.category==category_id).order_by(Question.id).all()
 
+    formatted_questions = paginate_questions(request, questions)
+
+    return jsonify({'success': True,
+                    'questions': formatted_questions,
+                    'total_questions': len(questions),
+                    'current category': category_id, #Todo
+                    'categories': 0}) #Todo
 
   '''
   @TODO: 
