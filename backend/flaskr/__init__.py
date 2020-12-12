@@ -13,12 +13,12 @@ def create_app(test_config=None):
   app = Flask(__name__)
   setup_db(app)
   
-def paginate_questions(request, selection):
-  question_id = request.args.get('page', 1, type=int)
-  start_id = (question_id-1)*QUESTIONS_PER_PAGE
-  end_id = question_id*QUESTIONS_PER_PAGE
-  formatted_questions = [question.format() for question in selection]
-  return formatted_questions[start_id:end_id]
+  def paginate_questions(request, selection):
+    question_id = request.args.get('page', 1, type=int)
+    start_id = (question_id-1)*QUESTIONS_PER_PAGE
+    end_id = question_id*QUESTIONS_PER_PAGE
+    formatted_questions = [question.format() for question in selection]
+    return formatted_questions[start_id:end_id]
 
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
