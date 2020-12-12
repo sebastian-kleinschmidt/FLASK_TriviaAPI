@@ -25,10 +25,20 @@ class TriviaTestCase(unittest.TestCase):
             'difficulty': 1
         }
 
+        self.new_invalid_question = {
+            'question': 'Who is the president elect?',
+            'category': 1,
+            'difficulty': 1
+        }
+
         self.start_quiz = {
-            'previous_questions' : [],
+            'previous_questions': [],
             'quiz_category': {'id': 1,
-                            'type': 'science'}
+                              'type': 'science'}
+        }
+
+        self.invalid_start_quiz = {
+            'previous_questions': []
         }
 
         # binds the app to the current context
@@ -71,6 +81,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['categories']))
 
+    # test question endpoint
+    def test_get_invalid_questions_page(self):
+        res = self.client().get('/questions?page=999')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
     # Test delete existing question endpoint
     def test_delete_existing_question(self):
         res = self.client().delete('/questions/2')
@@ -94,7 +111,7 @@ class TriviaTestCase(unittest.TestCase):
 
     # Test post question endpoint
     def test_post_question(self):
-        res =  self.client().post('/questions', json=self.new_question)
+        res = self.client().post('/questions', json=self.new_question)
         data = json.loads(res.data)
         
         self.assertEqual(res.status_code, 200)
@@ -102,6 +119,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
         self.assertTrue(data['total_questions'])
         self.assertTrue(data['created'])
+
+    def test_post_invalid_question(self):
+        res = self.client().post('/questions', json=self.new_invalid_question)
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['success'], False)
 
     # test categories question endpoint
     def test_get_questions_for_category(self):
@@ -113,6 +137,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['categories']))
 
+    # test categories question endpoint for non existing category
+    def test_get_questions_for_nonexisting_category(self):
+        res = self.client().get('/categories/999/questions')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)   
+
     # test quiz
     def test_get_questions_for_quiz(self):
         res = self.client().post('/quizzes', json=self.start_quiz)
@@ -121,7 +152,12 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['question']))
         self.assertTrue(data['total_questions'])
-        self.assertTrue(len(data['categories']))
+    
+    def test_invalid_get_questions_for_quiz(self):
+        res = self.client().post('/quizzes', json=self.invalid_start_quiz)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['success'], False)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
