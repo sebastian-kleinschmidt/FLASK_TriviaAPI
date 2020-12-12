@@ -190,7 +190,7 @@ def create_app(test_config=None):
             print("\nerror => {}\n".format(error))
             abort(422)
 
-    @app.route('/questions/search', methods=['GET', 'POST'])
+    @app.route('/questions/search', methods=['POST'])
     def search_question():
         body = request.get_json()
         if body is None:
@@ -208,9 +208,7 @@ def create_app(test_config=None):
 
             return jsonify({'success': True,
                             'questions': current_selections,
-                            'total_questions': len(current_selections),
-                            'current_category': 0,
-                            'categories': get_all_categories()})
+                            'total_questions': len(current_selections)})
         except Exception as error:
             print("\nerror => {}\n".format(error))
             abort(422)
