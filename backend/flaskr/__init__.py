@@ -164,7 +164,11 @@ def create_app(test_config=None):
         search = body.get('searchTerm', None)
 
         # Check if question is complete
-        if body is None or new_question is None or new_answer is None or new_category is None or new_difficulty is None:
+        if body is None or \
+           new_question is None or \
+           new_answer is None or \
+           new_category is None or \
+           new_difficulty is None:
             abort(400)
 
         try:
@@ -261,7 +265,8 @@ def create_app(test_config=None):
             abort(422)
         else:
             question_ids = [question.id for question in questions]
-            unanswered_question = list(set(question_ids) - set(previous_questions))
+            unanswered_question = list(set(question_ids) -
+                                       set(previous_questions))
 
             if(len(unanswered_question) != 0):
                 question_id = random.choice(unanswered_question)
