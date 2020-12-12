@@ -161,7 +161,6 @@ def create_app(test_config=None):
         new_answer = body.get('answer', None)
         new_category = body.get('category', None)
         new_difficulty = body.get('difficulty', None)
-        search = body.get('searchTerm', None)
 
         # Check if question is complete
         if body is None or \
@@ -172,33 +171,46 @@ def create_app(test_config=None):
             abort(400)
 
         try:
-            if search:
-                questions = Question.query.order_by(Question.id).filter(
-                    Question.question.ilike('%{}%'.format(search)))
-                current_selections = paginate_questions(request, questions)
+            question = Question(question=new_question,
+                                answer=new_answer,
+                                category=new_category,
+                                difficulty=new_difficulty)
+            question.insert()
 
-                return jsonify({'success': True,
-                                'questions': current_selections,
-                                'total_questions': len(current_selections),
-                                'current_category': 0,
-                                'categories': get_all_categories()})
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginate_questions(request, selection)
 
-            else:
-                question = Question(question=new_question,
-                                    answer=new_answer,
-                                    category=new_category,
-                                    difficulty=new_difficulty)
-                question.insert()
+            return jsonify({
+                'success': True,
+                'created': question.id,
+                'questions': current_questions,
+                'total_questions': len(Question.query.all())
+            })
+        except Exception as error:
+            print("\nerror => {}\n".format(error))
+            abort(422)
 
-                selection = Question.query.order_by(Question.id).all()
-                current_questions = paginate_questions(request, selection)
+    @app.route('/questions/search', methods=['GET', 'POST'])
+    def search_question():
+        body = request.get_json()
+        if body is None:
+            abort(400)
+        search = body.get('searchTerm', None)
 
-                return jsonify({
-                    'success': True,
-                    'created': question.id,
-                    'questions': current_questions,
-                    'total_questions': len(Question.query.all())
-                })
+        # Check if question is complete
+        if search is None:
+            abort(400)
+
+        try:
+            questions = Question.query.order_by(Question.id).filter(
+                Question.question.ilike('%{}%'.format(search)))
+            current_selections = paginate_questions(request, questions)
+
+            return jsonify({'success': True,
+                            'questions': current_selections,
+                            'total_questions': len(current_selections),
+                            'current_category': 0,
+                            'categories': get_all_categories()})
         except Exception as error:
             print("\nerror => {}\n".format(error))
             abort(422)

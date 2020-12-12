@@ -90,6 +90,20 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
+    # test question endpoint
+    def test_search_questions(self):
+        res = self.client().post('/questions/search', json={'searchTerm': 'hanks'})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+
+    # test invalid search question
+    def test_invalid_search_questions(self):
+        res = self.client().post('/questions/search')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['success'], False)
+
     # Test delete existing question endpoint
     def test_delete_existing_question(self):
         res = self.client().delete('/questions/2')
