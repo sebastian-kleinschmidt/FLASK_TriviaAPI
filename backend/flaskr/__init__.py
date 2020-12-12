@@ -13,6 +13,13 @@ def create_app(test_config=None):
   app = Flask(__name__)
   setup_db(app)
   
+def paginate_questions(request, selection):
+  question_id = request.args.get('page', 1, type=int)
+  start_id = (question_id-1)*QUESTIONS_PER_PAGE
+  end_id = question_id*QUESTIONS_PER_PAGE
+  formatted_questions = [question.format() for question in selection]
+  return formatted_questions[start_id:end_id]
+
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
@@ -56,15 +63,12 @@ def create_app(test_config=None):
   '''
   @app.route('/questions', methods=['GET'])
   def get_question():
-    question_id = request.args.get('page', 1, type=int)
-    start_id = (question_id-1)*10
-    end_id = question_id*10
     questions = Question.query.order_by(Question.id).all()
-    formatted_questions = [question.format() for question in questions]
+    formatted_questions = paginate_questions(request, questions)
 
     return jsonify({'success': True,
-                    'questions': formatted_questions[start_id:end_id],
-                    'total_questions': len(formatted_questions),
+                    'questions': formatted_questions,
+                    'total_questions': len(questions),
                     'current category': 0, #Todo
                     'categories': 0}) #Todo
 
@@ -84,15 +88,12 @@ def create_app(test_config=None):
             
       question.delete()
       print("Delete Success")
-      question_id = request.args.get('page', 1, type=int)
-      start_id = (question_id-1)*10
-      end_id = question_id*10
       questions = Question.query.order_by(Question.id).all()
-      formatted_questions = [question.format() for question in questions]
+      formatted_questions = paginate_questions(request, questions)
 
       return jsonify({'success': True,
-                      'questions': formatted_questions[start_id:end_id],
-                      'total_questions': len(formatted_questions),
+                      'questions': formatted_questions,
+                      'total_questions': len(questions),
                       'current category': 0, #Todo
                       'categories': 0}) #Todo
     except Exception as error:
@@ -109,6 +110,31 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+      body = request.get_json()
+      new_question = body.get('question', None)
+      new_answer = body.get('answer', None)
+      new_category = body.get('category', None)
+      new_difficulty = body.get('difficulty', None)
+
+      try: 
+          question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+          question.insert()
+          
+          selection = Question.query.order_by(Question.id).all()
+          current_books = paginate_questions(request, selection)
+          
+          return jsonify({
+              'success': True,
+              'created': question.id,
+              'books': current_books,
+              'total_books': len(Question.query.all())
+          })
+      except Exception as error: 
+          print("\nerror => {}\n".format(error)) 
+          abort(422)
 
   '''
   @TODO: 
