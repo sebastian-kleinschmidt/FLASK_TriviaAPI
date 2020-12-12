@@ -140,7 +140,6 @@ def create_app(test_config=None):
       new_category = body.get('category', None)
       new_difficulty = body.get('difficulty', None)
       search = body.get('searchTerm', None)
-      print(search)
 
       try: 
           if search: 
@@ -202,6 +201,34 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+
+  @app.route('/quizzes', methods=['GET','POST'])
+  def start_quiz():
+    body = request.get_json()
+    previous_questions = body.get('previous_questions', None)
+    quiz_category = body.get('quiz_category', None)
+    if(quiz_category['id']==0):
+      questions = Question.query.order_by(Question.id).all()
+    else:
+      questions = Question.query.filter(Question.category==(int(quiz_category['id'])+1)).order_by(Question.id).all()
+    #print(len(questions))
+    question_ids = [question.id for question in questions]
+    unanswered_question = list(set(question_ids) - set(previous_questions))
+    #print(unanswered_question)
+    if(len(unanswered_question)!=0):
+      question_id = random.choice(unanswered_question)
+      question = Question.query.filter(Question.id==question_id).one_or_none()
+      #print(question.format())
+      return jsonify({'success': True,
+                      'question': question.format(),
+                      'total_questions': len(questions),
+                      'current category': quiz_category['id'],
+                      'categories': get_all_categories()})
+    else:
+      return jsonify({'success': True,
+                      'total_questions': len(questions),
+                      'current category': quiz_category['id'],
+                      'categories': get_all_categories()})
 
   '''
   @TODO: 
