@@ -90,7 +90,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
-### GET /categories/'id'
+### GET /categories/`id`
 
 - Returns the id and name of a given categories as well as the success value
 
@@ -202,7 +202,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
-### DELETE /questions/'question_id'
+### DELETE /questions/`question_id`
 
 - Deletes the question with the given id. Returns a list of all categories, and the first 10 questions, the updated number of questions, and a success message. 
 
@@ -298,7 +298,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
-### POST /questions'
+### POST /questions
 
 - Creates a question with the given answer, difficulty and categorie. Returns the id of the created question, the first 10 questions, the updated number of questions, and a success message. 
 
@@ -386,7 +386,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
-### GET /categories/'category_id'/questions'
+### GET /categories/`category_id`/questions
 
 - Returns a list of a maximum of 10 questions of the given category, the available categories, the current category, the total number of questions in this category and a success message. The current page is given by the 'page' argument of the query string (default is the first page).
 
@@ -440,7 +440,7 @@ One note before you delve into your tasks: for each endpoint you are expected to
 }
 ```
 
-### GET /quizzes'
+### GET /quizzes
 
 - Returns an unanswered question of the seleceted category, the number of unanswered questions at this point, the selected category, and a success message.
 
