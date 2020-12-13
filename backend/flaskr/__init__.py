@@ -173,7 +173,7 @@ def create_app(test_config=None):
         try:
             question = Question(question=new_question,
                                 answer=new_answer,
-                                category=new_category,
+                                category=str(int(new_category)+1),
                                 difficulty=new_difficulty)
             question.insert()
 
